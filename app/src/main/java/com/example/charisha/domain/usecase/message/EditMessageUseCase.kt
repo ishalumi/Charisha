@@ -98,6 +98,10 @@ class EditMessageUseCase @Inject constructor(
             MessageRole.SYSTEM -> {
                 throw IllegalArgumentException("系统消息不可编辑")
             }
+
+            MessageRole.UNKNOWN -> {
+                throw IllegalArgumentException("未知消息类型不可编辑")
+            }
         }
     }
 

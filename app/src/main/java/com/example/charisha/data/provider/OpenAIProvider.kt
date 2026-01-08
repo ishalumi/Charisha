@@ -124,6 +124,7 @@ class OpenAIProvider(
         MessageRole.USER -> "user"
         MessageRole.ASSISTANT -> "assistant"
         MessageRole.SYSTEM -> "system"
+        MessageRole.UNKNOWN -> "user"
     }
 
     private fun buildContent(parts: List<ContentPart>): OpenAIContent {

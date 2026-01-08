@@ -108,9 +108,9 @@ class GeminiProvider(
             val role = when (msg.role) {
                 MessageRole.USER -> "user"
                 MessageRole.ASSISTANT -> "model"
-                MessageRole.SYSTEM -> return@forEach
+                MessageRole.SYSTEM, MessageRole.UNKNOWN -> return@forEach
             }
-            val parts = msg.contentToGeminiParts()
+            val parts = msg.content.contentToGeminiParts()
             if (parts.isNotEmpty()) contents.add(GeminiContent(role = role, parts = parts))
         }
 

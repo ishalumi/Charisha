@@ -13,8 +13,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.noties.markwon.Markwon
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
+import io.noties.markwon.syntax.Prism4jThemeDefault
 import io.noties.markwon.syntax.SyntaxHighlightPlugin
 import io.noties.prism4j.Prism4j
+import io.noties.prism4j.GrammarLocator
 
 @Composable
 fun MarkdownText(
@@ -51,11 +53,19 @@ fun MarkdownText(
 }
 
 private fun createMarkwon(context: Context, isDarkTheme: Boolean): Markwon {
-    val prism4j = Prism4j(CharishaGrammarLocator())
+    val prism4j = Prism4j(SimpleGrammarLocator())
     val theme = CharishaPrism4jTheme.create(isDarkTheme)
     return Markwon.builder(context)
         .usePlugin(StrikethroughPlugin.create())
         .usePlugin(TablePlugin.create(context))
         .usePlugin(SyntaxHighlightPlugin.create(prism4j, theme))
         .build()
+}
+
+/**
+ * 简单的 GrammarLocator 实现，返回 null 表示使用默认处理
+ */
+private class SimpleGrammarLocator : GrammarLocator {
+    override fun grammar(prism4j: Prism4j, language: String): Prism4j.Grammar? = null
+    override fun languages(): MutableSet<String> = mutableSetOf()
 }

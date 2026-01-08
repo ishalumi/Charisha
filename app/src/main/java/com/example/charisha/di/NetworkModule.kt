@@ -1,6 +1,5 @@
 package com.example.charisha.di
 
-import com.example.charisha.BuildConfig
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -14,6 +13,10 @@ import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+private const val CONNECT_TIMEOUT = 30L
+private const val READ_TIMEOUT = 120L
+private const val WRITE_TIMEOUT = 60L
+
 /**
  * 网络层 DI 模块
  */
@@ -25,12 +28,7 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor =
         HttpLoggingInterceptor().apply {
-            // 避免在日志中输出大体积 Base64（图片/PDF）与敏感内容
-            level = if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BASIC
-            } else {
-                HttpLoggingInterceptor.Level.NONE
-            }
+            level = HttpLoggingInterceptor.Level.BASIC
         }
 
     @Provides
@@ -52,10 +50,4 @@ object NetworkModule {
     ): Retrofit.Builder = Retrofit.Builder()
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-
-    companion object {
-        private const val CONNECT_TIMEOUT = 30L
-        private const val READ_TIMEOUT = 120L
-        private const val WRITE_TIMEOUT = 60L
-    }
 }

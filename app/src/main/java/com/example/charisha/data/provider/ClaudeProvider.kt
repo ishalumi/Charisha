@@ -75,7 +75,7 @@ class ClaudeProvider(
             val role = when (msg.role) {
                 MessageRole.USER -> "user"
                 MessageRole.ASSISTANT -> "assistant"
-                MessageRole.SYSTEM -> return@forEach
+                MessageRole.SYSTEM, MessageRole.UNKNOWN -> return@forEach
             }
             val blocks = msg.content.toClaudeBlocks()
             if (blocks.isNotEmpty()) messages.add(ClaudeMessage(role = role, content = blocks))

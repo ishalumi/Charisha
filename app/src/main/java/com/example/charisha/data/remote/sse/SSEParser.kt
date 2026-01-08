@@ -28,25 +28,37 @@ class SSEParser @Inject constructor(
      */
     fun parseOpenAIStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
-            parseSSELines(reader) { data ->
-                if (data == "[DONE]") {
-                    emit(StreamEvent.Done)
-                    return@parseSSELines
-                }
-                try {
-                    val response = json.decodeFromString<OpenAIChatResponse>(data)
-                    response.choices.firstOrNull()?.let { choice ->
-                        choice.delta?.let { delta ->
-                            delta.reasoningContent?.let { thinking ->
-                                emit(StreamEvent.ThinkingDelta(thinking))
+            val dataBuffer = StringBuilder()
+            reader.forEachLine { line ->
+                when {
+                    line.startsWith("data:") -> {
+                        val data = line.removePrefix("data:").trim()
+                        if (dataBuffer.isNotEmpty()) dataBuffer.append("\n")
+                        dataBuffer.append(data)
+                    }
+                    line.isEmpty() && dataBuffer.isNotEmpty() -> {
+                        val data = dataBuffer.toString()
+                        dataBuffer.clear()
+                        if (data == "[DONE]") {
+                            emit(StreamEvent.Done)
+                            return@forEachLine
+                        }
+                        try {
+                            val response = json.decodeFromString<OpenAIChatResponse>(data)
+                            response.choices.firstOrNull()?.let { choice ->
+                                choice.delta?.let { delta ->
+                                    delta.reasoningContent?.let { thinking ->
+                                        emit(StreamEvent.ThinkingDelta(thinking))
+                                    }
+                                    delta.content?.let { content ->
+                                        emit(StreamEvent.TextDelta(content))
+                                    }
+                                }
                             }
-                            delta.content?.let { content ->
-                                emit(StreamEvent.TextDelta(content))
-                            }
+                        } catch (e: Exception) {
+                            emit(StreamEvent.Error("PARSE_ERROR", e.message ?: "Failed to parse OpenAI response"))
                         }
                     }
-                } catch (e: Exception) {
-                    emit(StreamEvent.Error("PARSE_ERROR", e.message ?: "Failed to parse OpenAI response"))
                 }
             }
         }
@@ -126,41 +138,33 @@ class SSEParser @Inject constructor(
      */
     fun parseGeminiSSEStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
-            parseSSELines(reader) { data ->
-                try {
-                    val response = json.decodeFromString<GeminiResponse>(data)
-                    response.candidates?.firstOrNull()?.content?.parts?.forEach { part ->
-                        part.thought?.let { emit(StreamEvent.ThinkingDelta(it)) }
-                        part.text?.let { emit(StreamEvent.TextDelta(it)) }
+            val dataBuffer = StringBuilder()
+            reader.forEachLine { line ->
+                when {
+                    line.startsWith("data:") -> {
+                        val data = line.removePrefix("data:").trim()
+                        if (dataBuffer.isNotEmpty()) dataBuffer.append("\n")
+                        dataBuffer.append(data)
                     }
-                    response.error?.let {
-                        emit(StreamEvent.Error(it.status ?: "ERROR", it.message ?: "Unknown error"))
+                    line.isEmpty() && dataBuffer.isNotEmpty() -> {
+                        val data = dataBuffer.toString()
+                        dataBuffer.clear()
+                        try {
+                            val response = json.decodeFromString<GeminiResponse>(data)
+                            response.candidates?.firstOrNull()?.content?.parts?.forEach { part ->
+                                part.thought?.let { emit(StreamEvent.ThinkingDelta(it)) }
+                                part.text?.let { emit(StreamEvent.TextDelta(it)) }
+                            }
+                            response.error?.let {
+                                emit(StreamEvent.Error(it.status ?: "ERROR", it.message ?: "Unknown error"))
+                            }
+                        } catch (e: Exception) {
+                            emit(StreamEvent.Error("PARSE_ERROR", e.message ?: "Failed to parse Gemini SSE response"))
+                        }
                     }
-                } catch (e: Exception) {
-                    emit(StreamEvent.Error("PARSE_ERROR", e.message ?: "Failed to parse Gemini SSE response"))
                 }
             }
             emit(StreamEvent.Done)
         }
     }.flowOn(Dispatchers.IO)
-
-    private inline fun parseSSELines(reader: BufferedReader, onData: (String) -> Unit) {
-        val dataBuffer = StringBuilder()
-        reader.forEachLine { line ->
-            when {
-                line.startsWith("data:") -> {
-                    val data = line.removePrefix("data:").trim()
-                    if (dataBuffer.isNotEmpty()) dataBuffer.append("\n")
-                    dataBuffer.append(data)
-                }
-                line.isEmpty() && dataBuffer.isNotEmpty() -> {
-                    onData(dataBuffer.toString())
-                    dataBuffer.clear()
-                }
-            }
-        }
-        if (dataBuffer.isNotEmpty()) {
-            onData(dataBuffer.toString())
-        }
-    }
 }

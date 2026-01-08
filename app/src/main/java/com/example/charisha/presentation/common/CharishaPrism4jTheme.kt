@@ -1,6 +1,7 @@
 package com.example.charisha.presentation.common
 
-import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.annotation.ColorInt
 import io.noties.markwon.syntax.Prism4jTheme
@@ -23,7 +24,7 @@ class CharishaPrism4jTheme private constructor(
     override fun apply(
         language: String,
         syntax: Prism4j.Syntax,
-        builder: Spannable,
+        builder: SpannableStringBuilder,
         start: Int,
         end: Int
     ) {
@@ -33,7 +34,7 @@ class CharishaPrism4jTheme private constructor(
                 ForegroundColorSpan(color),
                 start,
                 end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
