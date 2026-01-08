@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import okhttp3.ResponseBody
-import java.io.BufferedReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,19 +28,21 @@ class SSEParser @Inject constructor(
     fun parseOpenAIStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
             val dataBuffer = StringBuilder()
-            reader.forEachLine { line ->
+            while (true) {
+                val line = reader.readLine() ?: break
                 when {
                     line.startsWith("data:") -> {
                         val data = line.removePrefix("data:").trim()
                         if (dataBuffer.isNotEmpty()) dataBuffer.append("\n")
                         dataBuffer.append(data)
                     }
+
                     line.isEmpty() && dataBuffer.isNotEmpty() -> {
                         val data = dataBuffer.toString()
                         dataBuffer.clear()
                         if (data == "[DONE]") {
                             emit(StreamEvent.Done)
-                            return@forEachLine
+                            break
                         }
                         try {
                             val response = json.decodeFromString<OpenAIChatResponse>(data)
@@ -71,13 +72,9 @@ class SSEParser @Inject constructor(
      */
     fun parseClaudeStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
-            var currentEvent: String? = null
-
-            reader.forEachLine { line ->
+            while (true) {
+                val line = reader.readLine() ?: break
                 when {
-                    line.startsWith("event:") -> {
-                        currentEvent = line.removePrefix("event:").trim()
-                    }
                     line.startsWith("data:") -> {
                         val data = line.removePrefix("data:").trim()
                         if (data.isNotEmpty()) {
@@ -90,7 +87,9 @@ class SSEParser @Inject constructor(
                                             delta.text?.let { emit(StreamEvent.TextDelta(it)) }
                                         }
                                     }
+
                                     "message_stop" -> emit(StreamEvent.Done)
+
                                     "error" -> {
                                         event.error?.let {
                                             emit(StreamEvent.Error(it.type, it.message))
@@ -113,7 +112,8 @@ class SSEParser @Inject constructor(
      */
     fun parseGeminiNDJSONStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
-            reader.forEachLine { line ->
+            while (true) {
+                val line = reader.readLine() ?: break
                 if (line.isNotBlank()) {
                     try {
                         val response = json.decodeFromString<GeminiResponse>(line)
@@ -139,13 +139,15 @@ class SSEParser @Inject constructor(
     fun parseGeminiSSEStream(responseBody: ResponseBody): Flow<StreamEvent> = flow {
         responseBody.byteStream().bufferedReader().use { reader ->
             val dataBuffer = StringBuilder()
-            reader.forEachLine { line ->
+            while (true) {
+                val line = reader.readLine() ?: break
                 when {
                     line.startsWith("data:") -> {
                         val data = line.removePrefix("data:").trim()
                         if (dataBuffer.isNotEmpty()) dataBuffer.append("\n")
                         dataBuffer.append(data)
                     }
+
                     line.isEmpty() && dataBuffer.isNotEmpty() -> {
                         val data = dataBuffer.toString()
                         dataBuffer.clear()

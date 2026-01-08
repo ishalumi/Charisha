@@ -15,11 +15,13 @@ class CharishaPrism4jTheme private constructor(
     private val isDarkTheme: Boolean
 ) : Prism4jTheme {
 
-    @ColorInt
-    override fun background(): Int = if (isDarkTheme) Dark.BACKGROUND else Light.BACKGROUND
+    private val colors: SyntaxColors = if (isDarkTheme) Dark else Light
 
     @ColorInt
-    override fun textColor(): Int = if (isDarkTheme) Dark.TEXT else Light.TEXT
+    override fun background(): Int = colors.BACKGROUND
+
+    @ColorInt
+    override fun textColor(): Int = colors.TEXT
 
     override fun apply(
         language: String,
@@ -41,7 +43,6 @@ class CharishaPrism4jTheme private constructor(
 
     @ColorInt
     private fun getColorForSyntax(type: String): Int {
-        val colors = if (isDarkTheme) Dark else Light
         return when (type) {
             "comment", "prolog", "doctype", "cdata" -> colors.COMMENT
             "punctuation" -> colors.PUNCTUATION
@@ -67,44 +68,64 @@ class CharishaPrism4jTheme private constructor(
         }
     }
 
-    private object Dark {
-        const val BACKGROUND: Int = 0xFF1E1E2E.toInt()
-        const val TEXT: Int = 0xFFCDD6F4.toInt()
-        const val KEYWORD: Int = 0xFFCBA6F7.toInt()
-        const val STRING: Int = 0xFFA6E3A1.toInt()
-        const val NUMBER: Int = 0xFFFAB387.toInt()
-        const val COMMENT: Int = 0xFF6C7086.toInt()
-        const val FUNCTION: Int = 0xFF89B4FA.toInt()
-        const val CLASS_NAME: Int = 0xFFF9E2AF.toInt()
-        const val OPERATOR: Int = 0xFF89DCEB.toInt()
-        const val BOOLEAN: Int = 0xFFFAB387.toInt()
-        const val PROPERTY: Int = 0xFFF5C2E7.toInt()
-        const val PUNCTUATION: Int = TEXT
-        const val BUILTIN: Int = FUNCTION
-        const val ATTR_NAME: Int = PROPERTY
-        const val TAG: Int = CLASS_NAME
-        const val SELECTOR: Int = KEYWORD
-        const val REGEX: Int = NUMBER
+    private interface SyntaxColors {
+        val BACKGROUND: Int
+        val TEXT: Int
+        val KEYWORD: Int
+        val STRING: Int
+        val NUMBER: Int
+        val COMMENT: Int
+        val FUNCTION: Int
+        val CLASS_NAME: Int
+        val OPERATOR: Int
+        val BOOLEAN: Int
+        val PROPERTY: Int
+        val PUNCTUATION: Int
+        val BUILTIN: Int
+        val ATTR_NAME: Int
+        val TAG: Int
+        val SELECTOR: Int
+        val REGEX: Int
     }
 
-    private object Light {
-        const val BACKGROUND: Int = 0xFFEFF1F5.toInt()
-        const val TEXT: Int = 0xFF4C4F69.toInt()
-        const val KEYWORD: Int = 0xFF8839EF.toInt()
-        const val STRING: Int = 0xFF40A02B.toInt()
-        const val NUMBER: Int = 0xFFFE640B.toInt()
-        const val COMMENT: Int = 0xFF9CA0B0.toInt()
-        const val FUNCTION: Int = 0xFF1E66F5.toInt()
-        const val CLASS_NAME: Int = 0xFFDF8E1D.toInt()
-        const val OPERATOR: Int = 0xFF179299.toInt()
-        const val BOOLEAN: Int = 0xFFFE640B.toInt()
-        const val PROPERTY: Int = 0xFFEA76CB.toInt()
-        const val PUNCTUATION: Int = TEXT
-        const val BUILTIN: Int = FUNCTION
-        const val ATTR_NAME: Int = PROPERTY
-        const val TAG: Int = CLASS_NAME
-        const val SELECTOR: Int = KEYWORD
-        const val REGEX: Int = NUMBER
+    private object Dark : SyntaxColors {
+        override val BACKGROUND: Int = 0xFF1E1E2E.toInt()
+        override val TEXT: Int = 0xFFCDD6F4.toInt()
+        override val KEYWORD: Int = 0xFFCBA6F7.toInt()
+        override val STRING: Int = 0xFFA6E3A1.toInt()
+        override val NUMBER: Int = 0xFFFAB387.toInt()
+        override val COMMENT: Int = 0xFF6C7086.toInt()
+        override val FUNCTION: Int = 0xFF89B4FA.toInt()
+        override val CLASS_NAME: Int = 0xFFF9E2AF.toInt()
+        override val OPERATOR: Int = 0xFF89DCEB.toInt()
+        override val BOOLEAN: Int = NUMBER
+        override val PROPERTY: Int = 0xFFF5C2E7.toInt()
+        override val PUNCTUATION: Int = TEXT
+        override val BUILTIN: Int = FUNCTION
+        override val ATTR_NAME: Int = PROPERTY
+        override val TAG: Int = CLASS_NAME
+        override val SELECTOR: Int = KEYWORD
+        override val REGEX: Int = NUMBER
+    }
+
+    private object Light : SyntaxColors {
+        override val BACKGROUND: Int = 0xFFEFF1F5.toInt()
+        override val TEXT: Int = 0xFF4C4F69.toInt()
+        override val KEYWORD: Int = 0xFF8839EF.toInt()
+        override val STRING: Int = 0xFF40A02B.toInt()
+        override val NUMBER: Int = 0xFFFE640B.toInt()
+        override val COMMENT: Int = 0xFF9CA0B0.toInt()
+        override val FUNCTION: Int = 0xFF1E66F5.toInt()
+        override val CLASS_NAME: Int = 0xFFDF8E1D.toInt()
+        override val OPERATOR: Int = 0xFF179299.toInt()
+        override val BOOLEAN: Int = NUMBER
+        override val PROPERTY: Int = 0xFFEA76CB.toInt()
+        override val PUNCTUATION: Int = TEXT
+        override val BUILTIN: Int = FUNCTION
+        override val ATTR_NAME: Int = PROPERTY
+        override val TAG: Int = CLASS_NAME
+        override val SELECTOR: Int = KEYWORD
+        override val REGEX: Int = NUMBER
     }
 
     companion object {
