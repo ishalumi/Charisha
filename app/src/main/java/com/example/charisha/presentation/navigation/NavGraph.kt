@@ -22,8 +22,16 @@ fun NavGraph(
         startDestination = Routes.CHAT,
         modifier = modifier
     ) {
+        composable(route = Routes.CHAT) {
+            ChatScreen(
+                conversationId = null,
+                onNavigateToChannels = { navController.navigate(Routes.CHANNEL_LIST) },
+                onNavigateToConversations = { navController.navigate(Routes.CONVERSATION_LIST) }
+            )
+        }
+
         composable(
-            route = Routes.CHAT,
+            route = Routes.CHAT_WITH_CONVERSATION_ID,
             arguments = listOf(navArgument("conversationId") { type = NavType.StringType; nullable = true })
         ) { backStackEntry ->
             val conversationId = backStackEntry.arguments?.getString("conversationId")
