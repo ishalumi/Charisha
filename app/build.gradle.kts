@@ -47,6 +47,14 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // 解决 JetBrains annotations 版本冲突
+        force("org.jetbrains:annotations:23.0.0")
+    }
+    exclude(group = "org.jetbrains", module = "annotations-java5")
+}
+
 dependencies {
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
