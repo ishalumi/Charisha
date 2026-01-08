@@ -77,6 +77,7 @@ fun ChannelEditScreen(
     var apiKey by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedModelId by remember { mutableStateOf<String?>(null) }
+    var modelsApiPath by remember { mutableStateOf("") }
 
     // 编辑模式下加载已有数据
     LaunchedEffect(uiState.editingChannel) {
@@ -85,6 +86,7 @@ fun ChannelEditScreen(
             selectedProvider = channel.providerType
             baseUrl = channel.baseUrl
             selectedModelId = channel.defaultModelId
+            modelsApiPath = channel.modelsApiPath.orEmpty()
         }
     }
 
@@ -181,6 +183,19 @@ fun ChannelEditScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // OpenAI 兼容接口：自定义 models 路径（默认 /models）
+            if (selectedProvider == ProviderType.OPENAI) {
+                OutlinedTextField(
+                    value = modelsApiPath,
+                    onValueChange = { modelsApiPath = it },
+                    label = { Text("Models API Path") },
+                    placeholder = { Text("models") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // API Key (仅新建模式显示)
             if (!isEditMode) {
                 OutlinedTextField(
@@ -254,7 +269,8 @@ fun ChannelEditScreen(
                                 name = name,
                                 providerType = selectedProvider,
                                 baseUrl = baseUrl,
-                                defaultModelId = selectedModelId
+                                defaultModelId = selectedModelId,
+                                modelsApiPath = modelsApiPath
                             )
                         )
                     } else {
@@ -263,7 +279,8 @@ fun ChannelEditScreen(
                                 name = name,
                                 providerType = selectedProvider,
                                 baseUrl = baseUrl,
-                                apiKey = apiKey
+                                apiKey = apiKey,
+                                modelsApiPath = modelsApiPath
                             )
                         )
                     }
